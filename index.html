@@ -18,8 +18,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- HTML5 QR Code Scanner -->
     <script src="https://unpkg.com/html5-qrcode"></script>
-    <!-- HTML2PDF สำหรับสร้าง PDF บนมือถือ -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <style>
         body {
@@ -294,9 +292,8 @@
             <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 mb-4 print-hide">
                 
                 <div class="mb-4 relative">
-                    <label class="block text-sm font-bold text-gray-700 mb-1">สายขาย (เลือกได้หลายรายการ)</label>
-                    <div id="cr-selected-lines" class="flex flex-wrap gap-2 mb-2"></div>
-                    <input type="text" id="cr-line-input" placeholder="ค้นหาหรือเลือกสายขาย..."
+                    <label class="block text-sm font-bold text-gray-700 mb-1">สายขาย</label>
+                    <input type="text" id="cr-line-input" placeholder="เลือกสายขาย..." value="ทั้งหมด"
                            onkeyup="filterCRLine()" onfocus="filterCRLine()" autocomplete="off"
                            class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all font-medium text-gray-700 bg-gray-50 cursor-pointer">
                     <ul id="cr-line-dropdown" class="absolute z-20 w-full bg-white border border-gray-200 rounded-xl mt-1 max-h-48 overflow-y-auto shadow-lg hidden no-scrollbar"></ul>
@@ -318,9 +315,9 @@
 
             <!-- ปุ่มพิมพ์ PDF -->
             <div id="print-pdf-btn-container" class="hidden mb-4 flex justify-end print-hide">
-                <button onclick="printToPDFMobile()" class="bg-red-600 text-white px-5 py-2.5 rounded-xl hover:bg-red-700 transition shadow-md flex items-center justify-center gap-2 font-bold text-sm w-full sm:w-auto">
+                <button onclick="window.print()" class="bg-red-600 text-white px-5 py-2.5 rounded-xl hover:bg-red-700 transition shadow-md flex items-center justify-center gap-2 font-bold text-sm w-full sm:w-auto">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
-                    แชร์ / พิมพ์ PDF (A4)
+                    พิมพ์เป็น PDF (A4)
                 </button>
             </div>
 
@@ -562,7 +559,6 @@
         
         // สำหรับหน้า "เช็ครางวัล"
         let crData = { salesLines: [], customers: [] };
-        let crSelectedLines = ["ทั้งหมด"]; // เก็บรายการสายขายที่เลือก
         let crSelectedCustId = "ทั้งหมด"; // เก็บ id ที่ผู้ใช้เลือกจาก List (ถ้าไม่ได้เลือกจะถือว่าเป็นทั้งหมด)
 
         window.onload = function() {
@@ -598,10 +594,7 @@
             
             // โหลดข้อมูลแท็บเช็ครางวัล
             callGasApi('getCheckRewardFilters', {}).then(res => { 
-                if (res.success) {
-                    crData = res.data; 
-                    updateLineChips(); // อัปเดต UI เริ่มต้น
-                }
+                if (res.success) crData = res.data; 
             });
         }
 
@@ -852,53 +845,6 @@
         // ส่วนการทำงานเมนู "เช็ครางวัล" (เพิ่มใหม่)
         // ========================================================
 
-        // อัปเดต UI ของสายขายที่เลือก (Chips)
-        function updateLineChips() {
-            const container = document.getElementById('cr-selected-lines');
-            container.innerHTML = '';
-            crSelectedLines.forEach(line => {
-                const chip = document.createElement('span');
-                chip.className = "inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-bold";
-                chip.innerHTML = `${line} <button onclick="removeLine('${line}')" class="text-blue-500 hover:text-blue-900 focus:outline-none">&times;</button>`;
-                container.appendChild(chip);
-            });
-        }
-
-        // ลบสายขายออกจากรายการที่เลือก
-        function removeLine(line) {
-            crSelectedLines = crSelectedLines.filter(l => l !== line);
-            if (crSelectedLines.length === 0) crSelectedLines = ["ทั้งหมด"];
-            updateLineChips();
-            document.getElementById('cr-cust-input').value = "ทั้งหมด";
-            crSelectedCustId = "ทั้งหมด";
-            filterCRLine();
-            filterCRCust();
-        }
-
-        // สลับสถานะการเลือกสายขาย (Toggle)
-        function toggleCRLine(item) {
-            if (item === "ทั้งหมด") {
-                crSelectedLines = ["ทั้งหมด"];
-            } else {
-                if (crSelectedLines.includes("ทั้งหมด")) {
-                    crSelectedLines = [];
-                }
-                if (crSelectedLines.includes(item)) {
-                    crSelectedLines = crSelectedLines.filter(l => l !== item);
-                    if (crSelectedLines.length === 0) crSelectedLines = ["ทั้งหมด"];
-                } else {
-                    crSelectedLines.push(item);
-                }
-            }
-            updateLineChips();
-            document.getElementById('cr-line-input').value = ""; 
-            document.getElementById('cr-cust-input').value = "ทั้งหมด";
-            crSelectedCustId = "ทั้งหมด";
-            filterCRLine();
-            filterCRCust();
-            document.getElementById('cr-line-input').focus();
-        }
-
         // กรองตัวเลือก สายขาย
         function filterCRLine() {
             const input = document.getElementById('cr-line-input');
@@ -912,14 +858,14 @@
             if (filtered.length > 0) {
                 filtered.forEach(item => {
                     const li = document.createElement('li');
-                    const isSelected = crSelectedLines.includes(item);
-                    
-                    li.className = `px-4 py-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-0 text-sm font-medium transition-colors flex justify-between items-center ${isSelected ? 'bg-blue-50 text-blue-700' : 'text-gray-700'}`;
-                    li.innerHTML = `<span>${item}</span> ${isSelected ? '<svg class="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>' : ''}`;
-                    
-                    li.onmousedown = function(e) {
-                        e.preventDefault(); // ไม่ให้ input เสีย focus
-                        toggleCRLine(item);
+                    li.className = "px-4 py-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-0 text-sm font-medium text-gray-700 transition-colors";
+                    li.textContent = item;
+                    li.onclick = function() {
+                        input.value = item;
+                        dropdown.classList.add('hidden');
+                        // เมื่อเปลี่ยนสายขาย ให้รีเซ็ตลูกค้า
+                        document.getElementById('cr-cust-input').value = "ทั้งหมด";
+                        crSelectedCustId = "ทั้งหมด";
                     };
                     dropdown.appendChild(li);
                 });
@@ -936,10 +882,12 @@
             const dropdown = document.getElementById('cr-cust-dropdown');
             dropdown.innerHTML = '';
             
-            // กรองข้อมูลลูกค้าเฉพาะสายขายที่เลือก
+            const currentLine = document.getElementById('cr-line-input').value;
+
+            // กรองข้อมูลลูกค้าเฉพาะสายขายที่เลือก (ถ้าไม่ได้เลือกทั้งหมด)
             let validCustomers = crData.customers;
-            if (!crSelectedLines.includes("ทั้งหมด")) {
-                validCustomers = validCustomers.filter(c => crSelectedLines.includes(c.line));
+            if (currentLine !== "ทั้งหมด") {
+                validCustomers = validCustomers.filter(c => c.line === currentLine);
             }
 
             // สร้าง Array ของ Option Object (มี id และ display)
@@ -985,7 +933,7 @@
 
             showLoading("กำลังค้นหาข้อมูล...");
             
-            callGasApi('searchRewardSummary', { salesLines: crSelectedLines, customerId: crSelectedCustId })
+            callGasApi('searchRewardSummary', { salesLine: lineInput, customerId: crSelectedCustId })
                 .then(response => {
                     hideLoading();
                     if(response.success) {
@@ -1081,137 +1029,6 @@
             // แสดง Card ทั้ง 2
             document.getElementById('cr-summary-card').classList.remove('hidden');
             document.getElementById('cr-table-card').classList.remove('hidden');
-        }
-
-        // ฟังก์ชันสำหรับแชร์ / พิมพ์ เป็น PDF รองรับมือถือ
-        async function printToPDFMobile() {
-            showLoading("กำลังสร้างไฟล์ PDF สำหรับแชร์...");
-            
-            // สร้าง Container เสมือนสำหรับจัดหน้า A4 เพื่อให้ html2pdf อ่าน
-            const container = document.createElement('div');
-            container.style.position = 'absolute';
-            container.style.left = '-9999px';
-            container.style.top = '0';
-            container.style.width = '210mm'; // ขนาด A4
-            container.style.backgroundColor = '#ffffff';
-            container.style.padding = '15mm';
-            container.style.fontFamily = "'K2D', sans-serif";
-            container.style.color = "#000";
-            
-            // เพิ่มหัวข้อรายงาน
-            const title = document.createElement('h2');
-            title.innerHTML = `รายงานสรุปของรางวัล (วันที่: ${formatDateTimeString(new Date().toISOString())})`;
-            title.style.fontSize = '20px';
-            title.style.fontWeight = 'bold';
-            title.style.marginBottom = '20px';
-            title.style.textAlign = 'center';
-            container.appendChild(title);
-
-            // โคลนเนื้อหาที่ต้องการ
-            const summaryClone = document.getElementById('cr-summary-card').cloneNode(true);
-            const tableClone = document.getElementById('cr-table-card').cloneNode(true);
-            
-            // ล้างสไตล์ที่ไม่จำเป็นออกสำหรับการพิมพ์
-            summaryClone.className = '';
-            summaryClone.style.marginBottom = '20px';
-            
-            tableClone.className = '';
-            
-            // ปรับตาราง
-            const tableDiv = tableClone.querySelector('.overflow-x-auto');
-            tableDiv.className = '';
-            tableDiv.style.overflow = 'visible';
-            
-            const table = tableClone.querySelector('table');
-            table.style.width = '100%';
-            table.style.borderCollapse = 'collapse';
-            table.style.tableLayout = 'fixed';
-            
-            const ths = table.querySelectorAll('th');
-            const tds = table.querySelectorAll('td');
-            [...ths, ...tds].forEach(cell => {
-                cell.style.border = '1px solid #000';
-                cell.style.padding = '8px';
-                cell.style.fontSize = '16px';
-                cell.style.color = '#000';
-                cell.style.whiteSpace = 'normal';
-                cell.style.wordWrap = 'break-word';
-            });
-            
-            // ปรับสรุปข้อมูล
-            const sumContainers = summaryClone.querySelectorAll('#cr-summary-container > div > div.grid');
-            sumContainers.forEach(grid => {
-                grid.style.display = 'grid';
-                grid.style.gridTemplateColumns = 'repeat(3, 1fr)';
-                grid.style.gap = '10px';
-                
-                Array.from(grid.children).forEach(col => {
-                    col.className = '';
-                    col.style.border = '1px solid #000';
-                    col.style.padding = '10px';
-                    col.style.borderRadius = '8px';
-                    col.style.textAlign = 'center';
-                    
-                    const texts = col.querySelectorAll('p');
-                    texts.forEach(t => { 
-                        t.className = ''; 
-                        t.style.color = '#000'; 
-                        t.style.fontSize = '16px'; 
-                        t.style.margin = '0 0 5px 0';
-                        if(t.innerText === "จำนวนลูกค้า" || t.innerText === "รายการ" || t.innerText === "จำนวนรวม") {
-                             t.style.fontWeight = 'bold';
-                        }
-                    });
-                });
-            });
-            
-            // ซ่อนไอคอนกลมๆ หน้าชื่อรางวัล
-            const badges = summaryClone.querySelectorAll('.w-2\\.5');
-            badges.forEach(b => b.style.display = 'none');
-            
-            container.appendChild(summaryClone);
-            container.appendChild(tableClone);
-            document.body.appendChild(container);
-
-            const opt = {
-                margin:       0,
-                filename:     'สรุปรางวัล.pdf',
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true, windowWidth: 794 },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
-
-            try {
-                const pdfBlob = await html2pdf().set(opt).from(container).outputPdf('blob');
-                const file = new File([pdfBlob], 'สรุปรางวัล.pdf', { type: 'application/pdf' });
-                
-                hideLoading();
-                
-                // ตรวจสอบการรองรับ Web Share API สำหรับการแชร์บนมือถือ
-                if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                    await navigator.share({
-                        files: [file],
-                        title: 'เอกสารสรุปรางวัล',
-                    });
-                } else {
-                    // Fallback สำหรับเบราว์เซอร์ที่ไม่รองรับ (ให้ดาวน์โหลดแทน)
-                    const url = URL.createObjectURL(pdfBlob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = 'สรุปรางวัล.pdf';
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                    showMsg('สำเร็จ', 'บันทึกไฟล์ PDF ลงในเครื่องของคุณแล้ว สามารถนำไปส่งต่อได้เลย', true);
-                }
-            } catch (err) {
-                console.error("PDF Error: ", err);
-                hideLoading();
-                showMsg('ข้อผิดพลาด', 'ไม่สามารถสร้างหรือแชร์ไฟล์ PDF ได้', false);
-            } finally {
-                document.body.removeChild(container);
-            }
         }
 
         // ========================================================
