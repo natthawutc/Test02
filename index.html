@@ -1186,7 +1186,9 @@
                 name: data.name,
                 ownerName: data.ownerName || '-',
                 remainingRights: data.remainingRights || '0',
-                totalRights: data.totalRights || data.remainingRights || '0'
+                totalRights: data.totalRights || data.remainingRights || '0',
+                redeemDate: data.redeemDate || '-',
+                receiveDate: data.receiveDate || '-'
             };
             document.getElementById('detail-code').innerText = code;
             document.getElementById('detail-owner').innerText = data.ownerName || '-';
@@ -1228,18 +1230,15 @@
             showLoading('กำลังสร้างบัตรรางวัล...');
 
             try {
-                const now = new Date();
-                const pad = n => String(n).padStart(2, '0');
-                const redeemDateStr = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()}, ${pad(now.getHours())}:${pad(now.getMinutes())}`;
-
                 const cardCanvas = await generateRewardCanvas({
                     ownerName: currentCouponData.ownerName,
                     rewardName: currentCouponData.name,
                     couponCode: currentCouponData.code,
                     totalRights: String(currentCouponData.totalRights),
                     points: Number(currentCouponData.points).toLocaleString(),
-                    redeemDate: redeemDateStr,
-                    receiveDate: redeemDateStr
+                    redeemDate: formatDateTimeString(currentCouponData.redeemDate),
+                    receiveDate: formatDateTimeString(currentCouponData.receiveDate),
+                    empId: currentEmpId
                 });
                 const jpgBase64 = cardCanvas.toDataURL('image/jpeg', 0.92);
 
@@ -1261,9 +1260,7 @@
                     points: currentCouponData.points,
                     usedRights: currentCouponData.remainingRights,
                     rewardCardBase64: jpgBase64,
-                    attachmentBase64: attachmentBase64,
-                    redeemDate: redeemDateStr,
-                    folderId: '1OUoct0mayu-MaKUU38T7cCDbpm5kgNd4'
+                    attachmentBase64: attachmentBase64
                 });
 
                 hideLoading();
@@ -1880,6 +1877,8 @@
             drawField('วันที่แลก', d.redeemDate, '#6b7280', '#111827', 46);
             drawDivider();
             drawField('วันที่รับรางวัล', d.receiveDate, '#6b7280', '#111827', 46);
+            drawDivider();
+            drawField('พนักงานขาย', d.empId, '#6b7280', '#065f46', 46);
 
             // ตราประทับ "ใช้แล้ว" (โดดเด่น)
             ctx.save();
