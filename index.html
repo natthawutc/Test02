@@ -19,6 +19,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- HTML5 QR Code Scanner -->
     <script src="https://unpkg.com/html5-qrcode"></script>
+    <!-- PDF Generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <style>
         body {
@@ -691,16 +694,31 @@
                     class="max-w-full max-h-full object-contain drop-shadow-md rounded-xl">
             </div>
             <div class="p-6">
+                <!-- เจ้าของรางวัล -->
+                <div class="bg-blue-50 border border-blue-100 rounded-xl p-3 mb-4 flex items-center gap-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    <div>
+                        <p class="text-[10px] font-bold text-blue-500 uppercase tracking-wider">เจ้าของรางวัล</p>
+                        <p id="detail-owner" class="font-bold text-blue-900 text-sm leading-tight"></p>
+                    </div>
+                </div>
+
                 <h3 id="detail-name" class="text-2xl font-bold text-gray-900 mb-4 leading-snug"></h3>
 
-                <div class="grid grid-cols-2 gap-3 mb-4">
-                    <div class="bg-blue-50 p-4 rounded-2xl border border-blue-100 text-center shadow-inner">
-                        <p class="text-xs text-blue-600 font-bold uppercase tracking-wider mb-1">แต้มที่ใช้แลก</p>
-                        <p id="detail-points" class="text-xl font-bold text-blue-900"></p>
+                <div class="grid grid-cols-3 gap-2 mb-4">
+                    <div class="bg-blue-50 p-3 rounded-2xl border border-blue-100 text-center shadow-inner">
+                        <p class="text-[10px] text-blue-600 font-bold uppercase tracking-wider mb-1">แต้มที่ใช้แลก</p>
+                        <p id="detail-points" class="text-lg font-bold text-blue-900"></p>
                     </div>
-                    <div class="bg-red-50 p-4 rounded-2xl border border-red-100 text-center shadow-inner">
-                        <p class="text-xs text-red-600 font-bold uppercase tracking-wider mb-1">วันหมดอายุ</p>
-                        <p id="detail-expiry" class="text-xl font-bold text-red-900"></p>
+                    <div class="bg-purple-50 p-3 rounded-2xl border border-purple-100 text-center shadow-inner">
+                        <p class="text-[10px] text-purple-600 font-bold uppercase tracking-wider mb-1">สิทธิ์คงเหลือ</p>
+                        <p id="detail-remaining" class="text-lg font-bold text-purple-900"></p>
+                    </div>
+                    <div class="bg-red-50 p-3 rounded-2xl border border-red-100 text-center shadow-inner">
+                        <p class="text-[10px] text-red-600 font-bold uppercase tracking-wider mb-1">วันหมดอายุ</p>
+                        <p id="detail-expiry" class="text-lg font-bold text-red-900"></p>
                     </div>
                 </div>
 
@@ -710,32 +728,17 @@
                 </div>
 
                 <div class="bg-purple-50 border border-purple-100 rounded-2xl p-5 shadow-inner mb-6">
-                    <h4
-                        class="font-bold text-purple-800 mb-4 text-sm flex items-center gap-2 border-b border-purple-200 pb-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-purple-600" fill="none"
-                            viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <h4 class="font-bold text-purple-800 mb-4 text-sm flex items-center gap-2 border-b border-purple-200 pb-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                         ข้อมูลการรับสิทธิ์
                     </h4>
-
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-xs font-bold text-purple-700 mb-1">จำนวนสิทธิ์ที่ใช้ (สูงสุด: <span
-                                    id="max-rights-label">-</span>)</label>
-                            <input type="number" id="detail-rights-input" min="1" oninput="validateRightsInput(this)"
-                                class="w-full px-4 py-3 rounded-xl border border-purple-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none transition-all text-lg font-bold text-purple-900 bg-white"
-                                placeholder="ระบุจำนวนสิทธิ์">
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-bold text-purple-700 mb-1">แนบรูปส่งมอบของรางวัล
-                                (ถ้ามี)</label>
-                            <input type="file" id="reward-image-input" accept="image/*" capture="environment"
-                                class="w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-purple-100 file:text-purple-700 hover:file:bg-purple-200 outline-none border border-purple-200 rounded-xl p-2 bg-white transition-colors focus:border-purple-500">
-                            <p class="text-[10px] text-purple-500 mt-1.5 ml-1">* ไฟล์ภาพจะถูกบันทึกลงในระบบ</p>
-                        </div>
+                    <div>
+                        <label class="block text-xs font-bold text-purple-700 mb-1">แนบรูปส่งมอบของรางวัล (ถ้ามี)</label>
+                        <input type="file" id="reward-image-input" accept="image/*" capture="environment"
+                            class="w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-purple-100 file:text-purple-700 hover:file:bg-purple-200 outline-none border border-purple-200 rounded-xl p-2 bg-white transition-colors focus:border-purple-500">
+                        <p class="text-[10px] text-purple-500 mt-1.5 ml-1">* ไฟล์ภาพจะถูกบันทึกลงในระบบ</p>
                     </div>
                 </div>
             </div>
@@ -753,6 +756,35 @@
                 ยืนยันแลกของรางวัล
             </button>
         </div>
+    </div>
+
+    <!-- ==================== หน้าต่างแสดงบัตรรับของรางวัล (หลังยืนยัน) ==================== -->
+    <div id="reward-card-modal"
+        class="fixed inset-0 z-[58] hidden bg-black flex flex-col print-hide" style="z-index:58;">
+        <div class="sticky top-0 w-full bg-gray-900 px-4 py-3 flex justify-between items-center shadow-lg">
+            <h3 class="text-white font-bold text-base">บัตรรับของรางวัล</h3>
+            <div class="flex gap-2">
+                <button id="btn-download-card" onclick="downloadRewardCard()"
+                    class="bg-green-500 text-white font-bold py-2 px-3 rounded-xl hover:bg-green-600 active:scale-95 transition flex items-center gap-1.5 text-sm shadow-md">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    ดาวน์โหลดไฟล์
+                </button>
+                <button id="btn-close-card" onclick="closeRewardCard()"
+                    class="font-bold py-2 px-3 rounded-xl transition flex items-center gap-1.5 text-sm bg-gray-700 text-gray-400 cursor-not-allowed" disabled>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    ปิด
+                </button>
+            </div>
+        </div>
+        <div class="flex-1 overflow-y-auto flex items-start justify-center p-4">
+            <img id="reward-card-img" src="" alt="บัตรรับของรางวัล"
+                class="max-w-full rounded-xl shadow-2xl" style="max-width:500px; width:100%;">
+        </div>
+        <p id="reward-card-hint" class="text-center text-yellow-400 text-xs pb-3 font-medium">* กรุณาดาวน์โหลดไฟล์ก่อนกดปิด</p>
     </div>
 
     <!-- ==================== หน้าต่างแสดงประวัติของรางวัลลูกค้า (ลูกค้า) ==================== -->
@@ -908,12 +940,15 @@
         let currentCouponData = null;
         let html5QrCode = null;
         let isScanning = false;
+        let currentRewardCardDataUrl = '';
+        let currentRewardCardDownloaded = false;
 
         let allCustomers = []; // สำหรับหน้า "ลูกค้า"
 
         // สำหรับหน้า "เช็ครางวัล"
         let crData = { salesLines: [], customers: [] };
         let crSelectedCustId = "ทั้งหมด"; // เก็บ id ที่ผู้ใช้เลือกจาก List (ถ้าไม่ได้เลือกจะถือว่าเป็นทั้งหมด)
+        let crLastData = []; // เก็บข้อมูลจากการค้นหาล่าสุดสำหรับสร้าง PDF
 
         window.onload = function () {
             if (GAS_WEBAPP_URL === "YOUR_GAS_WEB_APP_URL_HERE") {
@@ -946,6 +981,13 @@
             // โหลดข้อมูลแท็บลูกค้า
             callGasApi('getCustomerList', {}).then(res => { if (res.success) allCustomers = res.data; });
 
+            // ปิดช่องกรอกชื่อลูกค้าระหว่างโหลดข้อมูล
+            const crCustInput = document.getElementById('cr-cust-input');
+            crCustInput.disabled = true;
+            crCustInput.value = 'กำลังโหลดข้อมูล...';
+            crCustInput.classList.add('opacity-60', 'cursor-not-allowed');
+            crCustInput.classList.remove('cursor-pointer');
+
             // โหลดข้อมูลแท็บเช็ครางวัล
             callGasApi('getCheckRewardFilters', {}).then(res => {
                 if (res.success) {
@@ -954,6 +996,15 @@
                     buildCRLineDropdown();
                     renderCRLineTags();
                 }
+                crCustInput.disabled = false;
+                crCustInput.value = 'ทั้งหมด';
+                crCustInput.classList.remove('opacity-60', 'cursor-not-allowed');
+                crCustInput.classList.add('cursor-pointer');
+            }).catch(() => {
+                crCustInput.disabled = false;
+                crCustInput.value = 'ทั้งหมด';
+                crCustInput.classList.remove('opacity-60', 'cursor-not-allowed');
+                crCustInput.classList.add('cursor-pointer');
             });
         }
 
@@ -1129,15 +1180,19 @@
         }
 
         function openRewardDetail(code, data) {
-            currentCouponData = { code: code, points: data.points, name: data.name, remainingRights: data.remainingRights || '-' };
+            currentCouponData = {
+                code: code,
+                points: data.points,
+                name: data.name,
+                ownerName: data.ownerName || '-',
+                remainingRights: data.remainingRights || '0',
+                totalRights: data.totalRights || data.remainingRights || '0'
+            };
             document.getElementById('detail-code').innerText = code;
+            document.getElementById('detail-owner').innerText = data.ownerName || '-';
             document.getElementById('detail-name').innerText = data.name;
             document.getElementById('detail-points').innerText = Number(data.points).toLocaleString();
-
-            const rightsInput = document.getElementById('detail-rights-input');
-            const maxRights = parseInt(data.remainingRights) || 0;
-            rightsInput.value = data.remainingRights || ''; rightsInput.max = maxRights;
-            document.getElementById('max-rights-label').innerText = maxRights || '-';
+            document.getElementById('detail-remaining').innerText = data.remainingRights || '0';
             document.getElementById('detail-expiry').innerText = data.expiry;
 
             const imgEl = document.getElementById('detail-image');
@@ -1158,46 +1213,78 @@
         function clearCouponDetails() { currentCouponData = null; document.getElementById('coupon-input').value = ''; }
         function openConfirmModal() {
             if (!currentEmpId || !currentCouponData) return;
-            document.getElementById('confirm-text').innerHTML = `โปรดยืนยันการรับสิทธิ์สำหรับคูปอง<br><b class="text-blue-800 text-lg">${currentCouponData.name}</b><br><br>แต้มที่ต้องใช้: ${currentCouponData.points}`;
+            document.getElementById('confirm-text').innerHTML = `โปรดยืนยันการรับสิทธิ์สำหรับคูปอง<br><b class="text-blue-800 text-lg">${currentCouponData.name}</b><br><br>เจ้าของ: <b>${currentCouponData.ownerName}</b><br>สิทธิ์คงเหลือ: <b>${currentCouponData.remainingRights}</b> | แต้มที่ใช้: <b>${currentCouponData.points}</b>`;
             document.getElementById('confirm-modal').classList.remove('hidden');
         }
         function closeConfirmModal() { document.getElementById('confirm-modal').classList.add('hidden'); }
 
-        function processRedeem() {
+        async function processRedeem() {
             if (!currentEmpId || !currentCouponData) return;
-            const usedRightsValue = parseInt(document.getElementById('detail-rights-input').value) || 0;
-            const maxRights = parseInt(currentCouponData.remainingRights) || 0;
-
-            if (usedRightsValue <= 0) { showMsg('ข้อมูลไม่ถูกต้อง', 'กรุณาระบุจำนวนสิทธิ์อย่างน้อย 1 สิทธิ์', false); return; }
-            if (maxRights > 0 && usedRightsValue > maxRights) {
-                showMsg('ข้อมูลไม่ถูกต้อง', 'ไม่สามารถระบุสิทธิ์เกินจำนวนที่คงเหลือได้ (สูงสุด ' + maxRights + ' สิทธิ์)', false);
-                document.getElementById('detail-rights-input').value = maxRights; return;
-            }
 
             const btn = document.getElementById('btn-confirm-redeem');
-            btn.disabled = true; document.getElementById('txt-confirm-redeem').innerText = 'กำลังประมวลผล...';
-            closeConfirmModal(); showLoading('กำลังบันทึกและอัปโหลดข้อมูล...');
+            btn.disabled = true;
+            document.getElementById('txt-confirm-redeem').innerText = 'กำลังประมวลผล...';
+            closeConfirmModal();
+            showLoading('กำลังสร้างบัตรรางวัล...');
 
-            const sendDataToAPI = (base64ImageData) => {
-                callGasApi('saveUsage', {
-                    empId: currentEmpId, couponCode: currentCouponData.code, points: currentCouponData.points,
-                    usedRights: usedRightsValue, imageData: base64ImageData
-                }).then(response => {
-                    hideLoading(); btn.disabled = false; document.getElementById('txt-confirm-redeem').innerText = 'ยืนยัน';
-                    if (response.success) {
-                        closeRewardDetail(); showMsg('ทำรายการสำเร็จ!', 'บันทึกการรับสิทธิ์เรียบร้อยแล้ว', true); clearCouponDetails();
-                    } else { showMsg('ไม่สามารถบันทึกได้', response.message, false); }
-                }).catch(err => {
-                    hideLoading(); btn.disabled = false; document.getElementById('txt-confirm-redeem').innerText = 'ยืนยัน';
-                    showMsg('ข้อผิดพลาด', err.message, false);
+            try {
+                const now = new Date();
+                const pad = n => String(n).padStart(2, '0');
+                const redeemDateStr = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()}, ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+
+                const cardCanvas = await generateRewardCanvas({
+                    ownerName: currentCouponData.ownerName,
+                    rewardName: currentCouponData.name,
+                    couponCode: currentCouponData.code,
+                    totalRights: String(currentCouponData.totalRights),
+                    points: Number(currentCouponData.points).toLocaleString(),
+                    redeemDate: redeemDateStr,
+                    receiveDate: redeemDateStr
                 });
-            };
+                const jpgBase64 = cardCanvas.toDataURL('image/jpeg', 0.92);
 
-            const fileInput = document.getElementById('reward-image-input');
-            if (fileInput.files.length > 0) {
-                const file = fileInput.files[0]; const reader = new FileReader();
-                reader.onload = function (e) { sendDataToAPI(e.target.result); }; reader.readAsDataURL(file);
-            } else { sendDataToAPI(""); }
+                let attachmentBase64 = '';
+                const fileInput = document.getElementById('reward-image-input');
+                if (fileInput.files.length > 0) {
+                    attachmentBase64 = await new Promise(resolve => {
+                        const fr = new FileReader();
+                        fr.onload = e => resolve(e.target.result);
+                        fr.readAsDataURL(fileInput.files[0]);
+                    });
+                }
+
+                showLoading('กำลังบันทึกข้อมูล...');
+
+                const response = await callGasApi('saveUsage', {
+                    empId: currentEmpId,
+                    couponCode: currentCouponData.code,
+                    points: currentCouponData.points,
+                    usedRights: currentCouponData.remainingRights,
+                    rewardCardBase64: jpgBase64,
+                    attachmentBase64: attachmentBase64,
+                    redeemDate: redeemDateStr,
+                    folderId: '1OUoct0mayu-MaKUU38T7cCDbpm5kgNd4'
+                });
+
+                hideLoading();
+                btn.disabled = false;
+                document.getElementById('txt-confirm-redeem').innerText = 'ยืนยัน';
+
+                if (response.success) {
+                    currentRewardCardDataUrl = jpgBase64;
+                    currentRewardCardDownloaded = false;
+                    closeRewardDetail();
+                    clearCouponDetails();
+                    showRewardCard(jpgBase64);
+                } else {
+                    showMsg('ไม่สามารถบันทึกได้', response.message, false);
+                }
+            } catch (err) {
+                hideLoading();
+                btn.disabled = false;
+                document.getElementById('txt-confirm-redeem').innerText = 'ยืนยัน';
+                showMsg('ข้อผิดพลาด', err.message, false);
+            }
         }
 
         // ========================================================
@@ -1371,17 +1458,122 @@
                 });
         }
 
-        // ===== Print to PDF (รองรับมือถือ) =====
-        function printToPDF() {
-            // ปิด dropdown ที่อาจค้างอยู่
+        // ===== สร้างและดาวน์โหลด PDF (รองรับมือถือและคอมพิวเตอร์) =====
+        async function printToPDF() {
+            if (!crLastData || crLastData.length === 0) {
+                showMsg('ไม่มีข้อมูล', 'กรุณาค้นหาข้อมูลก่อนสร้าง PDF', false);
+                return;
+            }
+
             document.getElementById('cr-line-dropdown-multi').classList.remove('open');
             document.getElementById('cr-cust-dropdown').classList.add('hidden');
-            // สั่งพิมพ์
-            window.print();
+            showLoading('กำลังสร้าง PDF...');
+
+            // จัดกลุ่มข้อมูลสรุปตามรางวัล
+            const summaryByReward = {};
+            crLastData.forEach(item => {
+                const rn = item.reward || 'ไม่มีชื่อรางวัล';
+                if (!summaryByReward[rn]) summaryByReward[rn] = { customers: new Set(), total: 0 };
+                if (item.name) summaryByReward[rn].customers.add(item.name);
+                summaryByReward[rn].total += (parseInt(item.remaining) || 0);
+            });
+
+            const cs = 'border:1px solid #000;padding:5px 8px;font-size:16px;font-family:K2D,sans-serif;word-break:break-word;vertical-align:top;';
+            const ths = cs + 'background:#e8e8e8;font-weight:700;';
+
+            const summaryRows = Object.entries(summaryByReward).map(([rn, s]) =>
+                `<tr>
+                    <td style="${cs}">${rn}</td>
+                    <td style="${cs}text-align:center;">${s.customers.size.toLocaleString()}</td>
+                    <td style="${cs}text-align:center;">${s.total.toLocaleString()}</td>
+                </tr>`
+            ).join('');
+
+            const detailRows = crLastData.map((item, i) =>
+                `<tr style="background:${i % 2 === 1 ? '#f5f5f5' : '#fff'}">
+                    <td style="${cs}">${item.name || '-'}</td>
+                    <td style="${cs}">${item.reward || '-'}</td>
+                    <td style="${cs}text-align:center;">${item.remaining || '0'}</td>
+                </tr>`
+            ).join('');
+
+            const titleStyle = 'font-size:18px;font-weight:700;font-family:K2D,sans-serif;margin:0 0 10px;padding-bottom:6px;border-bottom:2px solid #000;color:#000;';
+
+            const pdfDiv = document.createElement('div');
+            pdfDiv.style.cssText = 'position:fixed;left:-9999px;top:0;width:794px;font-family:K2D,sans-serif;font-size:16px;background:#fff;padding:20px;color:#000;line-height:1.5;box-sizing:border-box;';
+            pdfDiv.innerHTML = `
+                <h3 style="${titleStyle}">สรุปข้อมูล (แยกตามรางวัล)</h3>
+                <table style="width:100%;border-collapse:collapse;margin-bottom:20px;">
+                    <thead><tr>
+                        <th style="${ths}">รางวัล</th>
+                        <th style="${ths}width:130px;text-align:center;">จำนวนลูกค้า</th>
+                        <th style="${ths}width:120px;text-align:center;">จำนวนรวม</th>
+                    </tr></thead>
+                    <tbody>${summaryRows}</tbody>
+                </table>
+                <h3 style="${titleStyle}">ตารางรายละเอียด</h3>
+                <table style="width:100%;border-collapse:collapse;">
+                    <thead><tr>
+                        <th style="${ths}">ชื่อ</th>
+                        <th style="${ths}">รางวัล</th>
+                        <th style="${ths}width:80px;text-align:center;">คงเหลือ</th>
+                    </tr></thead>
+                    <tbody>${detailRows}</tbody>
+                </table>
+            `;
+            document.body.appendChild(pdfDiv);
+
+            try {
+                await document.fonts.ready;
+                const canvas = await html2canvas(pdfDiv, {
+                    scale: 2,
+                    useCORS: true,
+                    logging: false,
+                    backgroundColor: '#ffffff',
+                    windowWidth: 834
+                });
+                document.body.removeChild(pdfDiv);
+
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+                const pageW = pdf.internal.pageSize.getWidth();
+                const pageH = pdf.internal.pageSize.getHeight();
+                const margin = 10;
+                const printW = pageW - 2 * margin;
+                const printH = (canvas.height / canvas.width) * printW;
+                const availH = pageH - 2 * margin;
+
+                let yDrawn = 0;
+                let pageNum = 0;
+                while (yDrawn < printH) {
+                    if (pageNum > 0) pdf.addPage();
+                    const sliceH = Math.min(availH, printH - yDrawn);
+                    const srcY = Math.round((yDrawn / printH) * canvas.height);
+                    const srcH = Math.round((sliceH / printH) * canvas.height);
+                    const sc = document.createElement('canvas');
+                    sc.width = canvas.width;
+                    sc.height = srcH;
+                    const ctx = sc.getContext('2d');
+                    ctx.fillStyle = '#fff';
+                    ctx.fillRect(0, 0, sc.width, sc.height);
+                    ctx.drawImage(canvas, 0, srcY, canvas.width, srcH, 0, 0, sc.width, sc.height);
+                    pdf.addImage(sc.toDataURL('image/jpeg', 0.92), 'JPEG', margin, margin, printW, sliceH);
+                    yDrawn += sliceH;
+                    pageNum++;
+                }
+
+                pdf.save('รายงานของรางวัล.pdf');
+            } catch (err) {
+                if (pdfDiv.parentNode) document.body.removeChild(pdfDiv);
+                showMsg('เกิดข้อผิดพลาด', 'ไม่สามารถสร้าง PDF ได้ โปรดลองใหม่', false);
+            } finally {
+                hideLoading();
+            }
         }
 
         // แสดงผลสรุป (แยกตามรางวัล) และตาราง
         function renderCheckRewardData(data) {
+            crLastData = data;
             let tableHtml = '';
 
             // Object สำหรับจัดกลุ่มข้อมูลตามชื่อรางวัล
@@ -1594,10 +1786,159 @@
             return rawStr;
         }
 
-        function validateRightsInput(input) {
-            let val = parseInt(input.value); let max = parseInt(input.max);
-            if (input.value.includes('-')) { input.value = input.value.replace('-', ''); val = parseInt(input.value); }
-            if (!isNaN(val) && !isNaN(max) && val > max) input.value = max;
+        // ===== สร้าง Canvas บัตรรับของรางวัล 1080×1920 =====
+        async function generateRewardCanvas(d) {
+            await document.fonts.ready;
+            const W = 1080, H = 1920;
+            const canvas = document.createElement('canvas');
+            canvas.width = W; canvas.height = H;
+            const ctx = canvas.getContext('2d');
+
+            // พื้นหลังขาว
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, W, H);
+
+            // Watermark "ใช้แล้ว" (กระจายทั่วพื้นหลัง)
+            ctx.save();
+            ctx.globalAlpha = 0.07;
+            ctx.fillStyle = '#cc0000';
+            ctx.font = 'bold 160px "K2D", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            for (let ry = 0; ry < 8; ry++) {
+                for (let rx = 0; rx < 3; rx++) {
+                    ctx.save();
+                    ctx.translate(rx * 420 + 120, ry * 270 + 80);
+                    ctx.rotate(-Math.PI / 6);
+                    ctx.fillText('ใช้แล้ว', 0, 0);
+                    ctx.restore();
+                }
+            }
+            ctx.restore();
+
+            // Header bar
+            ctx.fillStyle = '#1e3a8a';
+            ctx.fillRect(0, 0, W, 200);
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 62px "K2D", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('บัตรรับของรางวัล', W / 2, 80);
+            ctx.font = '400 42px "K2D", sans-serif';
+            ctx.fillText('จุลไหมไทย', W / 2, 150);
+
+            // เส้นขอบล่าง header
+            ctx.fillStyle = '#facc15';
+            ctx.fillRect(0, 198, W, 6);
+
+            // Content
+            let y = 270;
+            const lx = 80;
+            const rw = W - lx * 2;
+
+            const drawField = (label, value, labelClr = '#6b7280', valClr = '#111827', valSize = 52) => {
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'alphabetic';
+                ctx.font = '400 34px "K2D", sans-serif';
+                ctx.fillStyle = labelClr;
+                ctx.fillText(label, lx, y);
+                y += 48;
+                ctx.font = `bold ${valSize}px "K2D", sans-serif`;
+                ctx.fillStyle = valClr;
+                // Word wrap for long values
+                const maxW = rw;
+                const words = String(value || '-').split('');
+                let line = '';
+                for (let ch of words) {
+                    const test = line + ch;
+                    if (ctx.measureText(test).width > maxW && line.length > 0) {
+                        ctx.fillText(line, lx, y);
+                        y += valSize + 4;
+                        line = ch;
+                    } else { line = test; }
+                }
+                if (line) ctx.fillText(line, lx, y);
+                y += valSize + 18;
+            };
+
+            const drawDivider = () => {
+                ctx.fillStyle = '#e5e7eb';
+                ctx.fillRect(lx, y, rw, 2);
+                y += 28;
+            };
+
+            drawField('เจ้าของรางวัล', d.ownerName, '#2563eb', '#1e3a8a', 54);
+            drawDivider();
+            drawField('ชื่อของรางวัล', d.rewardName, '#6b7280', '#111827', 52);
+            drawDivider();
+            drawField('รหัสคูปอง', d.couponCode, '#6b7280', '#374151', 46);
+            drawDivider();
+            drawField('จำนวนสิทธิ์', d.totalRights, '#6b7280', '#7c3aed', 52);
+            drawDivider();
+            drawField('แต้มที่ใช้แลก', d.points, '#6b7280', '#b45309', 52);
+            drawDivider();
+            drawField('วันที่แลก', d.redeemDate, '#6b7280', '#111827', 46);
+            drawDivider();
+            drawField('วันที่รับรางวัล', d.receiveDate, '#6b7280', '#111827', 46);
+
+            // ตราประทับ "ใช้แล้ว" (โดดเด่น)
+            ctx.save();
+            ctx.globalAlpha = 0.13;
+            ctx.fillStyle = '#dc2626';
+            ctx.font = 'bold 230px "K2D", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.translate(W / 2, 1560);
+            ctx.rotate(-Math.PI / 10);
+            ctx.fillText('ใช้แล้ว', 0, 0);
+            ctx.restore();
+
+            // Footer
+            ctx.fillStyle = '#f3f4f6';
+            ctx.fillRect(0, H - 100, W, 100);
+            ctx.fillStyle = '#9ca3af';
+            ctx.font = '34px "K2D", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('จุลไหมไทย - ระบบสมาชิกฝ่ายขาย', W / 2, H - 50);
+
+            return canvas;
+        }
+
+        // ===== Modal บัตรรับของรางวัล =====
+        function showRewardCard(dataUrl) {
+            document.getElementById('reward-card-img').src = dataUrl;
+            const closeBtn = document.getElementById('btn-close-card');
+            closeBtn.disabled = true;
+            closeBtn.className = 'font-bold py-2 px-3 rounded-xl transition flex items-center gap-1.5 text-sm bg-gray-700 text-gray-400 cursor-not-allowed';
+            document.getElementById('reward-card-hint').classList.remove('hidden');
+            document.getElementById('reward-card-modal').classList.remove('hidden');
+        }
+
+        function downloadRewardCard() {
+            if (!currentRewardCardDataUrl) return;
+            const link = document.createElement('a');
+            link.href = currentRewardCardDataUrl;
+            link.download = 'บัตรรับของรางวัล.jpg';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            currentRewardCardDownloaded = true;
+            const closeBtn = document.getElementById('btn-close-card');
+            closeBtn.disabled = false;
+            closeBtn.className = 'font-bold py-2 px-3 rounded-xl transition flex items-center gap-1.5 text-sm bg-red-600 text-white hover:bg-red-700 active:scale-95 cursor-pointer';
+            document.getElementById('reward-card-hint').classList.add('hidden');
+        }
+
+        function closeRewardCard() {
+            if (!currentRewardCardDownloaded) {
+                showMsg('แจ้งเตือน', 'กรุณาดาวน์โหลดไฟล์บัตรก่อนปิด', false);
+                return;
+            }
+            document.getElementById('reward-card-modal').classList.add('hidden');
+            document.getElementById('reward-card-img').src = '';
+            currentRewardCardDataUrl = '';
+            currentRewardCardDownloaded = false;
         }
 
         // ปิด Dropdown หากคลิกพื้นที่ว่าง
