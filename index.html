@@ -1908,32 +1908,33 @@
         function showRewardCard(dataUrl) {
             document.getElementById('reward-card-img').src = dataUrl;
             const closeBtn = document.getElementById('btn-close-card');
-            closeBtn.disabled = true;
-            closeBtn.className = 'font-bold py-2 px-3 rounded-xl transition flex items-center gap-1.5 text-sm bg-gray-700 text-gray-400 cursor-not-allowed';
-            document.getElementById('reward-card-hint').classList.remove('hidden');
-            document.getElementById('reward-card-modal').classList.remove('hidden');
-        }
-
-        function downloadRewardCard() {
-            if (!currentRewardCardDataUrl) return;
-            const link = document.createElement('a');
-            link.href = currentRewardCardDataUrl;
-            link.download = 'บัตรรับของรางวัล.jpg';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            currentRewardCardDownloaded = true;
-            const closeBtn = document.getElementById('btn-close-card');
             closeBtn.disabled = false;
             closeBtn.className = 'font-bold py-2 px-3 rounded-xl transition flex items-center gap-1.5 text-sm bg-red-600 text-white hover:bg-red-700 active:scale-95 cursor-pointer';
             document.getElementById('reward-card-hint').classList.add('hidden');
+            document.getElementById('reward-card-modal').classList.remove('hidden');
+        }
+
+        async function downloadRewardCard() {
+            if (!currentRewardCardDataUrl) return;
+            const filename = 'บัตรรับของรางวัล.jpeg';
+            try {
+                const res = await fetch(currentRewardCardDataUrl);
+                const blob = await res.blob();
+                const file = new File([blob], filename, { type: 'image/jpeg' });
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    await navigator.share({ files: [file], title: 'บัตรรับของรางวัล' });
+                    return;
+                }
+            } catch (e) { /* fall through to link download */ }
+            const link = document.createElement('a');
+            link.href = currentRewardCardDataUrl;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
 
         function closeRewardCard() {
-            if (!currentRewardCardDownloaded) {
-                showMsg('แจ้งเตือน', 'กรุณาดาวน์โหลดไฟล์บัตรก่อนปิด', false);
-                return;
-            }
             document.getElementById('reward-card-modal').classList.add('hidden');
             document.getElementById('reward-card-img').src = '';
             currentRewardCardDataUrl = '';
